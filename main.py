@@ -1,18 +1,27 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from gwpy.timeseries import TimeSeriesDict, TimeSeries
-from gwpy.detector import ChannelList
-import tools
-# parameter setting -----
-round = 'round1'
-date = '2019-07-11'
-data_size = 8192
-sample_rate = 8192
-# ----- ----- ----- -----
-triggers = tools.trigger_list(date = date, round = round)
-channels = ["H1:GDS-CALIB_STRAIN"] + tools.aux_channel_list()
-path = '/Users/nims/Desktop/data/gwf_data/{}/{}/'.format(date, round)
-for trigger in triggers:
-    file_name = 'H_R-t{}-d{}-s{}.gwf'.format(trigger, data_size, sample_rate)
-    data = TimeSeriesDict.read(path+file_name, channels = channels, format = 'gwf')
-    print(data)
+import nds2
+from gwpy.timeseries import TimeSeriesDict as TSD
+from gwpy.time import tconvert
+import argparse
+import Settings
+import Read_files
+import Retrieve
+
+args = argparse.ArgumentParser(description = "Retrieve LIGO Data from nds")
+args.add_argument("--round",  "-r",    type = int,  help = "Round number")
+args.add_argument("--date",   "-d",    type = str,  help = "yyyy-mm-dd style date")
+args.add_argument("--normal", "-n",    type = bool, help = "additional download to normal state LIGO data")
+args.add_argument("--stride", "-s",    type = int,  help = "Data segment from each gps trigger/normal time")
+parse = args.parse_args()
+
+round_winner = "round" + str(parse.round)
+date = parse.date
+
+site1 = 'nds.ligo.caltech.edu'
+site2 = 'nds.ligo-wa.caltech.edu'
+
+Settings.directory(round_winner, date).make_directory()
+Settings.directory(round_winner, date).check_list()
+
+Retrieve.retrieve(round_winner, date).trigger(3)
+
